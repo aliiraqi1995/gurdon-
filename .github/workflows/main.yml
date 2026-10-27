@@ -18,15 +18,11 @@ jobs:
 
       - name: Extract Project ZIP
         run: |
-          # استبدل project.zip باسم ملفك المضغوط الفعلي إذا كان مختلفاً
-          unzip -q project.zip -d extracted_project
-          cd extracted_project
-          # إذا كان الملف المضغوط يحتوي على مجلد داخلي، نتحرك داخله
-          # (يمكنك تعديل اسم المجلد الناتج إذا لزم الأمر)
+          unzip -q *.zip -d extracted_project
 
       - name: Build Debug APK
         run: |
-          cd extracted_project
+          cd extracted_project/*
           chmod +x gradlew || true
           ./gradlew assembleDebug
 
@@ -34,5 +30,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: extracted_project/app/build/outputs/apk/debug/app-debug.apk
+          path: extracted_project/*/app/build/outputs/apk/debug/app-debug.apk
           

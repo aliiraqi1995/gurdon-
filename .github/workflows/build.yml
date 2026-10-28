@@ -12,11 +12,13 @@ jobs:
       - run: mkdir extracted && unzip -q intruder-snap.zip -d extracted
       - name: Build APK
         run: |
-          cd extracted
-          cd $(ls -d */ | head -n 1)
+          # البحث عن مكان وجود ملف gradlew والانتقال إليه تلقائياً
+          PROJECT_DIR=$(dirname $(find extracted -name "gradlew" | head -n 1))
+          cd $PROJECT_DIR
           chmod +x gradlew
           ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
           path: extracted/**/app/build/outputs/apk/debug/app-debug.apk
+          

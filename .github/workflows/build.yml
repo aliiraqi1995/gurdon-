@@ -20,21 +20,38 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Check and Prepare Project Files
+    - name: Unpack ZIP and Prepare Project Files
       run: |
-        # إذا كانت الملفات داخل مجلد فرعي انقلها للمسار الرئيسي
-        if [ -d "LockGuard-Android13" ] && [ ! -f "settings.gradle.kts" ]; then
-          cp -r LockGuard-Android13/* .
-          cp -r LockGuard-Android13/.* . 2>/dev/null || true
+        echo "=== 1. فك ضغط أي ملف ZIP مرفوع في المستودع ==="
+        ZIP_FILE=$(find . -maxdepth 2 -name "*.zip" | head -n 1)
+        if [ -n "$ZIP_FILE" ]; then
+          echo "تم العثور على: $ZIP_FILE .. جاري فك الضغط أوتوماتيكياً"
+          unzip -o "$ZIP_FILE"
+        fi
+
+        echo "=== 2. ترتيب مسارات الملفات ==="
+        SUBFOLDER=$(find . -maxdepth 2 -type d -name "*LockGuard*" | head -n 1)
+        if [ -n "$SUBFOLDER" ] && [ ! -f "settings.gradle.kts" ]; then
+          cp -r $SUBFOLDER/* . 2>/dev/null || true
+          cp -r $SUBFOLDER/.* . 2>/dev/null || true
+        fi
+
+        SETTINGS_PATH=$(find . -name "settings.gradle.kts" -o -name "settings.gradle" | head -n 1)
+        if [ -n "$SETTINGS_PATH" ]; then
+          PROJ_DIR=$(dirname "$SETTINGS_PATH")
+          if [ "$PROJ_DIR" != "." ]; then
+            cp -r $PROJ_DIR/* . 2>/dev/null || true
+            cp -r $PROJ_DIR/.* . 2>/dev/null || true
+          fi
         fi
 
     - name: Build Debug APK
       run: |
+        echo "=== 3. تجميع وبناء ملف APK ==="
         if [ -f "./gradlew" ]; then
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
         else
-          echo "Using system gradle..."
           gradle assembleDebug --stacktrace
         fi
 
